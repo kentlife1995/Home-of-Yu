@@ -1,3 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游家小館 | 線上點餐</title>
+    <!-- 引入 Tailwind CSS 以便快速構建響應式排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 品牌核心顏色與字體設定 */
+        :root {
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --gold-primary: #D4AF37;
+            --gold-light: #F3E5AB;
+            --gold-dark: #AA8623;
+            --text-main: #f4f4f4;
+            --text-muted: #9ca3af;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+            padding-bottom: 80px;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .gold-border { border-color: var(--gold-primary); }
+        .gold-text { color: var(--gold-primary); }
+        .bg-gold { background-color: var(--gold-primary); color: var(--bg-dark); }
+        
+        .modal-enter { animation: slideUp 0.3s ease-out forwards; }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- 頂部品牌招牌區 -->
+    <header class="sticky top-0 z-40 bg-[#0a0a0a] border-b-2 gold-border shadow-lg">
+        <div class="px-4 py-3 flex items-center justify-center flex-col relative">
+            <svg width="40" height="40" viewBox="0 0 100 100" class="mb-1" fill="none" stroke="#D4AF37" stroke-width="4">
+                <path d="M20 50 Q 50 80 80 50 Z" fill="#121212"/>
+                <path d="M15 50 L 85 50" stroke-linecap="round"/>
+                <path d="M40 20 Q 50 10 50 30 T 60 20" stroke-width="3" stroke-linecap="round" fill="none"/>
+                <text x="50" y="68" font-size="16" fill="#D4AF37" stroke="none" text-anchor="middle" font-family="sans-serif" font-weight="bold">游</text>
+            </svg>
+            <h1 class="text-xl font-bold tracking-widest gold-text">游家小館</h1>
+            <p class="text-xs mt-1" style="color: var(--gold-dark);">家味流傳 · 食在溫暖</p>
+        </div>
+        
+        <!-- 分類導覽列 -->
+        <nav class="flex overflow-x-auto no-scrollbar px-4 py-2 gap-3 border-t border-gray-800" id="categoryNav"></nav>
+    </header>
+
+    <!-- 菜單列表區 -->
+    <main class="p-4" id="menuContainer"></main>
+
+    <!-- 底部懸浮購物車 -->
+    <div id="floatingCart" class="fixed bottom-0 left-0 w-full bg-[#0a0a0a] border-t gold-border px-4 py-3 flex justify-between items-center z-40 shadow-[0_-4px_15px_rgba(0,0,0,0.5)]">
+        <div class="flex flex-col cursor-pointer w-1/2" onclick="toggleCartModal()">
+            <span class="text-sm text-gray-400">購物車 <span id="cartCount" class="bg-gold text-xs px-2 py-0.5 rounded-full ml-1 font-bold">0</span></span>
+            <span class="text-lg font-bold gold-text" id="cartTotal">NT$ 0</span>
+        </div>
+        <button onclick="toggleCartModal()" class="bg-gold px-6 py-2 rounded-md font-bold text-[#121212] active:scale-95 transition-transform">
+            查看明細
+        </button>
+    </div>
+
+    <!-- 規格選擇彈出視窗 -->
+    <div id="variantModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex-col justify-end">
+        <div class="bg-[#1e1e1e] w-full rounded-t-2xl p-5 modal-enter border-t gold-border pb-10">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modalItemName" class="text-xl font-bold gold-text">餐點名稱</h3>
+                <button onclick="closeModal()" class="text-gray-400 text-3xl leading-none">&times;</button>
+            </div>
+            <div id="variantOptions" class="flex flex-col gap-3 mb-6"></div>
+        </div>
+    </div>
+
+    <!-- 購物車明細與送出訂單視窗 -->
+    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex-col justify-end">
+        <div class="bg-[#1e1e1e] w-full rounded-t-2xl p-5 modal-enter border-t gold-border h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold gold-text">確認訂單</h3>
+                <button onclick="toggleCartModal()" class="text-gray-400 text-3xl leading-none">&times;</button>
+            </div>
+            
+            <div id="cartItemsList" class="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-4 mb-4 border-b border-gray-700 pb-4">
+                <!-- 購物車內容 -->
+            </div>
+            
+            <div class="mt-2 flex justify-between items-center mb-4">
+                <span class="text-lg text-gray-300">總計</span>
+                <span class="text-2xl font-bold gold-text" id="cartModalTotal">NT$ 0</span>
+            </div>
+
+            <!-- 桌號與聯絡資訊輸入區 -->
+            <div class="mb-4">
+                <label class="block text-sm text-gray-400 mb-1">桌號 / 取餐稱呼 <span class="text-red-500">*</span></label>
+                <input type="text" id="orderIdentity" placeholder="例如：第3桌 或 游先生外帶" class="w-full bg-[#121212] border border-[#D4AF37] text-white p-3 rounded focus:outline-none focus:ring-1 focus:ring-[#D4AF37]">
+                <p id="identityError" class="text-red-500 text-xs mt-1 hidden">請務必填寫此欄位，方便我們為您送餐。</p>
+            </div>
+
+            <button id="submitOrderBtn" onclick="submitOrder()" class="w-full bg-gold py-3 rounded-md font-bold text-[#121212] text-lg active:scale-95 transition-transform">
+                送出訂單 (現場買單)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Telegram 機器人設定區 ---
+        const TELEGRAM_BOT_TOKEN = '8797020818:AAHH_gxtsPhsJEE7Qblg8AHmzEsONSLhNY8';
+        const TELEGRAM_CHAT_ID = '8686233849'; // 使用能成功接收的私人 ID
+
+        const menuData = [
+            {
+                category: "招牌主食",
+                items: [
+                    { id: 'm1', name: '咖哩飯', desc: '濃郁家常風味，請選擇肉品', price: 120, hasVariants: true, variants: [
+                        { id: 'v1', name: '豬肉片', price: 120 },
+                        { id: 'v2', name: '雞肉片', price: 120 },
+                        { id: 'v3', name: '羊肉片', price: 130 },
+                        { id: 'v4', name: '牛肉片', price: 130 }
+                    ]},
+                    { id: 'm2', name: '紅燒獅子頭飯', desc: '手打肉丸，滷汁拌飯絕配', price: 130, hasVariants: false },
+                    { id: 'm3', name: '瓜仔肉飯', desc: '鹹香下飯，古早味', price: 40, hasVariants: true, variants: [
+                        { id: 'v5', name: '小碗', price: 40 },
+                        { id: 'v6', name: '大碗', price: 55 }
+                    ]}
+                ]
+            },
+            {
+                category: "特色麵食",
+                items: [
+                    { id: 'm4', name: '特調乾麵', desc: '老闆獨門秘方自製醬', price: 55, hasVariants: false },
+                    { id: 'm5', name: '烏醋乾麵', desc: '酸香開胃', price: 45, hasVariants: false },
+                    { id: 'm6', name: '瓜仔肉麵', desc: '搭配 Q 彈麵條', price: 45, hasVariants: false },
+                    { id: 'm7', name: '清湯麵', desc: '清爽湯頭', price: 40, hasVariants: false }
+                ]
+            },
+            {
+                category: "湯品與滷味",
+                items: [
+                    { id: 'm8', name: '燕丸味噌湯', desc: '特色燕丸搭配香濃味噌', price: 55, hasVariants: false },
+                    { id: 'm9', name: '味噌湯', desc: '傳統家常味', price: 35, hasVariants: false },
+                    { id: 'm10', name: '滷豆腐', desc: '入味軟嫩', price: 30, hasVariants: false },
+                    { id: 'm11', name: '滷海帶', desc: '脆口鮮甜', price: 25, hasVariants: false },
+                    { id: 'm12', name: '滷豆乾', desc: '經典必點', price: 25, hasVariants: false },
+                    { id: 'm13', name: '滷蛋', desc: '', price: 15, hasVariants: false }
+                ]
+            },
+            {
+                category: "涼拌小菜",
+                items: [
+                    { id: 'm14', name: '精選小菜', desc: '清爽解膩', price: 40, hasVariants: true, variants: [
+                        { id: 'v7', name: '小黃瓜', price: 40 },
+                        { id: 'v8', name: '大頭菜', price: 40 },
+                        { id: 'v9', name: '素雞', price: 40 },
+                        { id: 'v10', name: '乾絲', price: 40 }
+                    ]},
+                    { id: 'm15', name: '老闆限定特色小菜 A', desc: '每日市場新鮮採買，限量供應', price: 40, hasVariants: false },
+                    { id: 'm16', name: '老闆限定特色小菜 B', desc: '依當日驚喜食材製作', price: 50, hasVariants: false },
+                    { id: 'm17', name: '老闆限定特色小菜 C', desc: '豪華升級版特製小菜', price: 60, hasVariants: false }
+                ]
+            }
+        ];
+
+        let cart = [];
+
+        function initApp() {
+            renderNav();
+            renderMenu();
+        }
+
+        function renderNav() {
+            const nav = document.getElementById('categoryNav');
+            let navHTML = '';
+            menuData.forEach((cat, index) => {
+                const isActive = index === 0 ? 'bg-gold' : 'border border-[#D4AF37] gold-text';
+                navHTML += `<a href="#cat-${index}" class="whitespace-nowrap px-4 py-1 rounded-full text-sm font-bold ${isActive}">${cat.category}</a>`;
+            });
+            nav.innerHTML = navHTML;
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('menuContainer');
+            let menuHTML = '';
+
+            menuData.forEach((cat, index) => {
+                menuHTML += `
+                    <div id="cat-${index}" class="mb-8 pt-4">
+                        <h2 class="text-xl font-bold gold-text mb-4 border-l-4 gold-border pl-2">${cat.category}</h2>
+                        <div class="flex flex-col gap-4">
+                `;
+                
+                cat.items.forEach(item => {
+                    const priceDisplay = item.hasVariants ? `$${item.price} 起` : `$${item.price}`;
+                    const btnAction = item.hasVariants ? `openVariantModal('${item.id}')` : `addToCart('${item.id}', '${item.name}', ${item.price})`;
+                    const btnText = item.hasVariants ? '選擇規格' : '+ 加入';
+
+                    menuHTML += `
+                        <div class="bg-[#1e1e1e] p-4 rounded-lg border border-gray-800 flex justify-between items-center shadow-md">
+                            <div class="flex-1 pr-4">
+                                <h3 class="text-lg font-bold text-white mb-1">${item.name}</h3>
+                                <p class="text-xs text-gray-400 mb-2">${item.desc}</p>
+                                <span class="gold-text font-bold text-lg">${priceDisplay}</span>
+                            </div>
+                            <button onclick="${btnAction}" class="border border-[#D4AF37] gold-text px-4 py-1.5 rounded text-sm font-bold hover:bg-[#D4AF37] hover:text-[#121212] transition-colors">
+                                ${btnText}
+                            </button>
+                        </div>
+                    `;
+                });
+
+                menuHTML += `</div></div>`;
+            });
+            container.innerHTML = menuHTML;
+        }
+
+        function addToCart(id, name, price, variantName = '') {
+            const fullName = variantName ? `${name} (${variantName})` : name;
+            const existingItem = cart.find(i => i.id === id && i.variantName === variantName);
+
+            if (existingItem) {
+                existingItem.qty += 1;
+            } else {
+                cart.push({ id, name: fullName, price, qty: 1, variantName });
+            }
+            
+            updateCartUI();
+            closeModal();
+            
+            const cartTotalEl = document.getElementById('cartTotal');
+            cartTotalEl.classList.add('scale-110', 'transition-transform');
+            setTimeout(() => cartTotalEl.classList.remove('scale-110'), 200);
+        }
+
+        function updateCartUI() {
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            document.getElementById('cartCount').innerText = count;
+            document.getElementById('cartTotal').innerText = `NT$ ${total}`;
+            document.getElementById('cartModalTotal').innerText = `NT$ ${total}`;
+
+            renderCartItems();
+        }
+
+        function renderCartItems() {
+            const list = document.getElementById('cartItemsList');
+            if (cart.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-500 mt-10">購物車目前是空的</p>';
+                document.getElementById('submitOrderBtn').classList.add('opacity-50', 'pointer-events-none');
+                return;
+            } else {
+                document.getElementById('submitOrderBtn').classList.remove('opacity-50', 'pointer-events-none');
+            }
+
+            let html = '';
+            cart.forEach((item, index) => {
+                html += `
+                    <div class="flex justify-between items-center bg-[#2a2a2a] p-3 rounded">
+                        <div>
+                            <div class="font-bold text-white">${item.name}</div>
+                            <div class="text-sm gold-text">NT$ ${item.price}</div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="changeQty(${index}, -1)" class="w-8 h-8 rounded-full bg-[#121212] border border-gray-600 text-white font-bold flex items-center justify-center">-</button>
+                            <span class="w-4 text-center">${item.qty}</span>
+                            <button onclick="changeQty(${index}, 1)" class="w-8 h-8 rounded-full bg-[#121212] border border-gray-600 text-white font-bold flex items-center justify-center">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function changeQty(index, delta) {
+            cart[index].qty += delta;
+            if (cart[index].qty <= 0) cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function openVariantModal(itemId) {
+            let foundItem = null;
+            menuData.forEach(cat => {
+                const item = cat.items.find(i => i.id === itemId);
+                if (item) foundItem = item;
+            });
+            if (!foundItem) return;
+
+            document.getElementById('modalItemName').innerText = foundItem.name;
+            const optionsContainer = document.getElementById('variantOptions');
+            let optionsHTML = '';
+
+            foundItem.variants.forEach(v => {
+                optionsHTML += `
+                    <button onclick="addToCart('${foundItem.id}', '${foundItem.name}', ${v.price}, '${v.name}')" 
+                            class="w-full text-left bg-[#2a2a2a] p-4 rounded-lg flex justify-between items-center active:bg-gray-700 border border-transparent active:border-[#D4AF37]">
+                        <span class="text-white text-lg">${v.name}</span>
+                        <span class="gold-text font-bold text-lg">NT$ ${v.price}</span>
+                    </button>
+                `;
+            });
+
+            optionsContainer.innerHTML = optionsHTML;
+            document.getElementById('variantModal').classList.remove('hidden');
+            document.getElementById('variantModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('variantModal').classList.add('hidden');
+            document.getElementById('variantModal').classList.remove('flex');
+        }
+
+        function toggleCartModal() {
+            const modal = document.getElementById('cartModal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.getElementById('identityError').classList.add('hidden');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        async function submitOrder() {
+            if (cart.length === 0) return;
+
+            const identityInput = document.getElementById('orderIdentity');
+            const identity = identityInput.value.trim();
+            const errorMsg = document.getElementById('identityError');
+
+            if (!identity) {
+                errorMsg.classList.remove('hidden');
+                identityInput.focus();
+                return;
+            }
+            errorMsg.classList.add('hidden');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            let orderText = `🔔【游家小館 - 新訂單】\n`;
+            orderText += `👤 桌號/稱呼：${identity}\n`;
+            orderText += `----------------------\n`;
+            cart.forEach(item => {
+                orderText += `▪️ ${item.name} x${item.qty} ($${item.price * item.qty})\n`;
+            });
+            orderText += `----------------------\n`;
+            orderText += `💰 總金額：NT$ ${total}\n`;
+            orderText += `📝 狀態：現場買單\n`;
+            orderText += `⏰ 時間：${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`;
+
+            const btn = document.getElementById('submitOrderBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "訂單傳送中...";
+            btn.classList.add('opacity-75', 'pointer-events-none');
+
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id: TELEGRAM_CHAT_ID,
                         text: orderText
@@ -45,6 +420,5 @@
     </script>
 </body>
 </html>
-
 
 
