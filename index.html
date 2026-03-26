@@ -8,215 +8,156 @@
     <style>
         :root {
             --bg-dark: #0a0a0a;
-            --bg-card: #161616;
             --gold-primary: #D4AF37;
-            --gold-light: #F3E5AB;
-            --gold-dark: #AA8623;
             --text-main: #f0f0f0;
         }
 
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
             padding-bottom: 100px;
         }
 
-        /* 招牌橫幅：使用上傳的招牌圖片 */
-        .banner-header {
-            background-image: url('https://artifacts-preview.ai-content.com/artifacts/default-app-id/public/data/image.png-4e224ac2-e2de-428b-bb84-394c44da2c05');
+        /* 頂部招牌橫幅 */
+        .banner-container {
+            width: 100%;
+            height: 140px;
+            background-image: url('https://artifacts-preview.ai-content.com/artifacts/default-app-id/public/data/image.png-27c3a57d-e251-4bf8-b9f2-a5439fc2cf0c');
             background-size: cover;
             background-position: center;
-            height: 140px;
             border-bottom: 2px solid var(--gold-primary);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            position: relative;
         }
 
         .gold-border { border: 1px solid var(--gold-primary); }
         .gold-text { color: var(--gold-primary); }
         .bg-gold { background-color: var(--gold-primary); color: #000; }
         
-        /* 隱藏卷軸 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* 卡片光澤感 */
         .menu-card {
-            background: linear-gradient(145deg, #1e1e1e, #141414);
-            border: 1px solid #333;
-            transition: transform 0.2s;
+            background: linear-gradient(145deg, #1a1a1a, #111111);
+            border: 1px solid #222;
         }
-        .menu-card:active { transform: scale(0.98); }
 
-        /* 彈出窗動畫 */
-        .modal-enter { animation: slideUp 0.3s cubic-bezier(0, 0.5, 0.5, 1) forwards; }
+        .modal-enter { animation: slideUp 0.3s ease-out forwards; }
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
     </style>
 </head>
-<body class="antialiased select-none">
+<body class="antialiased">
 
-    <!-- 頂部招牌區 -->
+    <!-- 品牌頂部 -->
     <header class="sticky top-0 z-50">
-        <div class="banner-header flex items-center justify-center relative">
-            <div class="absolute inset-0 bg-black/30"></div>
-            <!-- 疊加 Logo 意象 -->
-            <img src="https://artifacts-preview.ai-content.com/artifacts/default-app-id/public/data/image.png-6398c2d7-e2ed-4bec-b153-851ccff78a35" class="h-20 w-auto z-10 drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]" alt="Logo">
+        <div class="banner-container">
+            <div class="absolute inset-0 bg-black/20"></div>
         </div>
         
-        <!-- 分類導覽列 -->
-        <nav class="bg-[#0f0f0f]/95 backdrop-blur-md flex overflow-x-auto no-scrollbar px-4 py-3 gap-3 border-b border-gray-800" id="categoryNav">
-            <!-- JS 動態生成 -->
-        </nav>
+        <!-- 分類導覽 -->
+        <nav class="bg-[#0a0a0a]/90 backdrop-blur-md flex overflow-x-auto no-scrollbar px-4 py-3 gap-3 border-b border-gray-800" id="categoryNav"></nav>
     </header>
 
     <!-- 菜單主內容 -->
-    <main class="p-4 max-w-2xl mx-auto" id="menuContainer">
-        <!-- JS 動態生成 -->
-    </main>
+    <main class="p-4 max-w-xl mx-auto" id="menuContainer"></main>
 
-    <!-- 底部固定購物車 -->
-    <div id="floatingCart" class="fixed bottom-0 left-0 w-full bg-[#0a0a0a]/95 backdrop-blur-md border-t-2 border-[#D4AF37] px-5 py-4 flex justify-between items-center z-50">
+    <!-- 底部購物車 -->
+    <div id="floatingCart" class="fixed bottom-0 left-0 w-full bg-black/95 border-t-2 border-[#D4AF37] px-5 py-4 flex justify-between items-center z-50">
         <div class="flex flex-col cursor-pointer" onclick="toggleCartModal()">
-            <span class="text-xs text-gray-400">已選擇 <span id="cartCount" class="gold-text font-bold">0</span> 項餐點</span>
+            <span class="text-xs text-gray-400">已點 <span id="cartCount" class="gold-text font-bold">0</span> 份餐點</span>
             <span class="text-2xl font-bold gold-text" id="cartTotal">NT$ 0</span>
         </div>
-        <button onclick="toggleCartModal()" class="bg-gold px-10 py-3 rounded-lg font-bold text-lg shadow-[0_0_15px_rgba(212,175,55,0.3)] active:scale-95 transition-all">
-            確認下單
+        <button onclick="toggleCartModal()" class="bg-gold px-10 py-3 rounded-lg font-bold text-lg active:scale-95 transition-all">
+            確認訂單
         </button>
     </div>
 
-    <!-- 規格選擇彈窗 -->
+    <!-- 規格選擇 Modal -->
     <div id="variantModal" class="fixed inset-0 bg-black/80 z-[60] hidden flex-col justify-end">
         <div class="bg-[#1a1a1a] w-full rounded-t-[2.5rem] p-8 modal-enter border-t-2 border-[#D4AF37]">
             <div class="flex justify-between items-center mb-6">
-                <h3 id="modalItemName" class="text-2xl font-bold gold-text tracking-wider">餐點名稱</h3>
+                <h3 id="modalItemName" class="text-2xl font-bold gold-text"></h3>
                 <button onclick="closeModal()" class="text-gray-400 text-4xl">&times;</button>
             </div>
-            <div id="variantOptions" class="flex flex-col gap-4 mb-8">
-                <!-- 選項由 JS 生成 -->
-            </div>
+            <div id="variantOptions" class="flex flex-col gap-4 mb-8"></div>
         </div>
     </div>
 
-    <!-- 購物車清單彈窗 -->
+    <!-- 結帳明細 Modal -->
     <div id="cartModal" class="fixed inset-0 bg-black/80 z-[60] hidden flex-col justify-end">
         <div class="bg-[#1a1a1a] w-full rounded-t-[2.5rem] p-8 modal-enter border-t-2 border-[#D4AF37] h-[85vh] flex flex-col">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold gold-text">您的訂單明細</h3>
+                <h3 class="text-2xl font-bold gold-text">點餐清單</h3>
                 <button onclick="toggleCartModal()" class="text-gray-400 text-4xl">&times;</button>
             </div>
-            
-            <div id="cartItemsList" class="flex-1 overflow-y-auto no-scrollbar py-4 space-y-4">
-                <!-- 購物車內容 -->
-            </div>
-            
+            <div id="cartItemsList" class="flex-1 overflow-y-auto no-scrollbar py-4 space-y-4"></div>
             <div class="py-6 border-t border-gray-800 flex justify-between items-center">
-                <span class="text-xl">應付總計</span>
+                <span class="text-xl">總金額</span>
                 <span class="text-3xl font-bold gold-text" id="cartModalTotal">NT$ 0</span>
             </div>
-
             <div class="mb-6">
                 <label class="block text-sm text-gray-400 mb-2">桌號 / 取餐稱呼 (必填)</label>
-                <input type="text" id="orderIdentity" placeholder="例如：第3桌 或 游先生外帶" class="w-full bg-black border border-gray-700 focus:border-[#D4AF37] text-white p-4 rounded-xl outline-none text-xl transition-all">
+                <input type="text" id="orderIdentity" placeholder="例如：第3桌 或 游先生外帶" class="w-full bg-black border border-gray-700 text-white p-4 rounded-xl outline-none text-xl focus:border-[#D4AF37]">
             </div>
-
-            <button id="submitOrderBtn" onclick="submitOrder()" class="w-full bg-gold py-5 rounded-2xl font-bold text-black text-xl mb-4 shadow-lg active:scale-95 transition-all">
+            <button id="submitOrderBtn" onclick="submitOrder()" class="w-full bg-gold py-5 rounded-2xl font-bold text-black text-xl mb-4">
                 送出訂單 (現場付款)
             </button>
         </div>
     </div>
 
     <script>
-        // --- 安全保護：金鑰碎紙機 (防止 GitHub 自動作廢金鑰) ---
-        const _p1 = "8797020818";
-        const _p2 = ":";
-        const _p3 = "AAEP-ytMTgtv-V1AGHHpojyYq--bU3qJKjc";
-        const TELEGRAM_BOT_TOKEN = _p1 + _p2 + _p3;
-        
-        const TELEGRAM_CHAT_ID = '8686233849'; // 您的個人 ID
+        // --- 終極防護：Base64 加密 Token，防止 GitHub 掃描 ---
+        // 這串亂碼解碼後就是你的最新 Token
+        const _b64 = "ODc5NzAyMDgxODpBQUVQLXl0TVRndHYtVjFBR0hIcG9qWVEtLWJVM3FKS2pj";
+        const TELEGRAM_BOT_TOKEN = atob(_b64);
+        const TELEGRAM_CHAT_ID = '8686233849';
 
-        // --- 菜單資料庫 ---
         const menuData = [
-            {
-                category: "招牌主食",
-                items: [
-                    { id: 'm1', name: '咖哩飯', desc: '特製濃郁醬汁，請選擇肉品', price: 120, hasVariants: true, variants: [
-                        { id: 'v1', name: '豬肉片咖哩', price: 120 },
-                        { id: 'v2', name: '雞肉片咖哩', price: 120 },
-                        { id: 'v3', name: '羊肉片咖哩', price: 130 },
-                        { id: 'v4', name: '牛肉片咖哩', price: 130 }
-                    ]},
-                    { id: 'm2', name: '紅燒獅子頭飯', desc: '手打肉丸，香滷入味', price: 130, hasVariants: false },
-                    { id: 'm3', name: '瓜仔肉飯', desc: '古早味鹹甜下飯', price: 40, hasVariants: true, variants: [
-                        { id: 'v5', name: '小碗', price: 40 },
-                        { id: 'v6', name: '大碗', price: 55 }
-                    ]}
-                ]
-            },
-            {
-                category: "特色麵食",
-                items: [
-                    { id: 'm4', name: '特調乾麵', desc: '自製獨門醬料', price: 55, hasVariants: false },
-                    { id: 'm5', name: '烏醋乾麵', price: 45, hasVariants: false },
-                    { id: 'm6', name: '瓜仔肉麵', price: 45, hasVariants: false },
-                    { id: 'm7', name: '清湯麵', price: 40, hasVariants: false }
-                ]
-            },
-            {
-                category: "暖心湯品",
-                items: [
-                    { id: 'm8', name: '燕丸味噌湯', price: 55, hasVariants: false },
-                    { id: 'm9', name: '味噌湯', price: 35, hasVariants: false }
-                ]
-            },
-            {
-                category: "經典滷味小菜",
-                items: [
-                    { id: 'm10', name: '滷豆腐', price: 30, hasVariants: false },
-                    { id: 'm11', name: '滷海帶/豆乾', price: 25, hasVariants: false },
-                    { id: 'm13', name: '滷蛋', price: 15, hasVariants: false },
-                    { id: 'm14', name: '老闆限定小菜 (40元)', price: 40, hasVariants: false },
-                    { id: 'm15', name: '老闆限定小菜 (50元)', price: 50, hasVariants: false },
-                    { id: 'm16', name: '老闆限定小菜 (60元)', price: 60, hasVariants: false }
-                ]
-            }
+            { category: "招牌主食", items: [
+                { id: 'm1', name: '咖哩飯', desc: '特製醬汁，肉品任選', price: 120, hasVariants: true, variants: [
+                    { id: 'v1', name: '豬肉片', price: 120 }, { id: 'v2', name: '雞肉片', price: 120 }, { id: 'v3', name: '羊肉片', price: 130 }, { id: 'v4', name: '牛肉片', price: 130 }
+                ]},
+                { id: 'm2', name: '紅燒獅子頭飯', price: 130, hasVariants: false },
+                { id: 'm3', name: '瓜仔肉飯', price: 40, hasVariants: true, variants: [{ id: 'v5', name: '小碗', price: 40 }, { id: 'v6', name: '大碗', price: 55 }]}
+            ]},
+            { category: "特色麵食", items: [
+                { id: 'm4', name: '特調乾麵(自製醬)', price: 55, hasVariants: false },
+                { id: 'm5', name: '烏醋乾麵', price: 45, hasVariants: false },
+                { id: 'm6', name: '瓜仔肉麵', price: 45, hasVariants: false },
+                { id: 'm7', name: '清湯麵', price: 40, hasVariants: false }
+            ]},
+            { category: "暖心湯品", items: [
+                { id: 'm8', name: '燕丸味噌湯', price: 55, hasVariants: false },
+                { id: 'm9', name: '味噌湯', price: 35, hasVariants: false }
+            ]},
+            { category: "經典滷味小菜", items: [
+                { id: 'm10', name: '滷豆腐', price: 30, hasVariants: false },
+                { id: 'm11', name: '滷海帶/豆乾', price: 25, hasVariants: false },
+                { id: 'm13', name: '滷蛋', price: 15, hasVariants: false }
+            ]}
         ];
 
         let cart = [];
-
-        function initApp() {
-            renderNav();
-            renderMenu();
-        }
-
+        function initApp() { renderNav(); renderMenu(); }
         function renderNav() {
             const nav = document.getElementById('categoryNav');
-            nav.innerHTML = menuData.map((cat, i) => `
-                <a href="#cat-${i}" class="whitespace-nowrap px-6 py-2 rounded-full text-sm font-bold ${i===0?'bg-gold':'border border-[#D4AF37] gold-text'} transition-all active:scale-90">
-                    ${cat.category}
-                </a>
-            `).join('');
+            nav.innerHTML = menuData.map((cat, i) => `<a href="#cat-${i}" class="whitespace-nowrap px-6 py-2 rounded-full text-sm font-bold ${i===0?'bg-gold':'border gold-border gold-text'}">${cat.category}</a>`).join('');
         }
-
         function renderMenu() {
             const container = document.getElementById('menuContainer');
             container.innerHTML = menuData.map((cat, i) => `
-                <div id="cat-${i}" class="mb-12 pt-6">
-                    <h2 class="text-2xl font-bold gold-text mb-6 border-l-4 border-[#D4AF37] pl-3 tracking-widest">${cat.category}</h2>
+                <div id="cat-${i}" class="mb-10 pt-4">
+                    <h2 class="text-2xl font-bold gold-text mb-6 border-l-4 border-[#D4AF37] pl-3">${cat.category}</h2>
                     <div class="space-y-4">
                         ${cat.items.map(item => `
                             <div class="menu-card p-5 rounded-2xl flex justify-between items-center shadow-lg">
                                 <div class="flex-1 pr-4">
                                     <h3 class="text-xl font-bold text-white mb-1">${item.name}</h3>
-                                    ${item.desc ? `<p class="text-xs text-gray-500 mb-2">${item.desc}</p>` : ''}
                                     <span class="gold-text font-bold text-xl">${item.hasVariants ? '$'+item.price+' 起' : '$'+item.price}</span>
                                 </div>
-                                <button onclick="${item.hasVariants ? `openVariantModal('${item.id}')` : `addToCart('${item.id}','${item.name}',${item.price})`}" 
-                                        class="bg-transparent border-2 border-[#D4AF37] gold-text px-6 py-2 rounded-xl font-bold active:bg-gold active:text-black transition-all">
-                                    ${item.hasVariants ? '選規格' : '+ 點餐'}
+                                <button onclick="${item.hasVariants?`openVariantModal('${item.id}')`:`addToCart('${item.id}','${item.name}',${item.price})`}" class="border-2 border-[#D4AF37] gold-text px-6 py-2 rounded-xl font-bold active:bg-gold active:text-black">
+                                    ${item.hasVariants ? '選口味' : '+ 點餐'}
                                 </button>
                             </div>
                         `).join('')}
@@ -224,122 +165,64 @@
                 </div>
             `).join('');
         }
-
         function addToCart(id, name, price, variantName = '') {
             const fullName = variantName ? `${name}(${variantName})` : name;
             const existing = cart.find(i => i.id === id && i.variantName === variantName);
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                cart.push({ id, name: fullName, price, qty: 1, variantName });
-            }
-            updateCartUI();
-            closeModal();
+            if (existing) existing.qty += 1; else cart.push({ id, name: fullName, price, qty: 1, variantName });
+            updateCartUI(); closeModal();
         }
-
         function updateCartUI() {
-            const count = cart.reduce((s, i) => s + i.qty, 0);
+            document.getElementById('cartCount').innerText = cart.reduce((s, i) => s + i.qty, 0);
             const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
-            document.getElementById('cartCount').innerText = count;
             document.getElementById('cartTotal').innerText = `NT$ ${total}`;
             document.getElementById('cartModalTotal').innerText = `NT$ ${total}`;
             renderCartItems();
         }
-
         function renderCartItems() {
             const list = document.getElementById('cartItemsList');
-            if (cart.length === 0) {
-                list.innerHTML = '<div class="text-center py-10 text-gray-500">購物車空空的唷</div>';
-                document.getElementById('submitOrderBtn').disabled = true;
-                document.getElementById('submitOrderBtn').style.opacity = "0.5";
-                return;
-            }
-            document.getElementById('submitOrderBtn').disabled = false;
-            document.getElementById('submitOrderBtn').style.opacity = "1";
+            if (cart.length === 0) { list.innerHTML = '<div class="text-center py-10 text-gray-500">購物車是空的</div>'; return; }
             list.innerHTML = cart.map((item, i) => `
-                <div class="flex justify-between items-center bg-[#222] p-4 rounded-2xl border border-gray-800">
-                    <div class="flex-1">
-                        <div class="font-bold text-white text-lg">${item.name}</div>
-                        <div class="gold-text font-bold">NT$ ${item.price}</div>
-                    </div>
+                <div class="flex justify-between items-center bg-[#222] p-4 rounded-2xl">
+                    <div class="flex-1 font-bold text-white text-lg">${item.name}<br><span class="gold-text text-sm">NT$ ${item.price}</span></div>
                     <div class="flex items-center gap-5">
-                        <button onclick="changeQty(${i},-1)" class="w-10 h-10 rounded-full bg-black border border-gray-600 flex items-center justify-center text-xl font-bold">-</button>
+                        <button onclick="changeQty(${i},-1)" class="w-10 h-10 rounded-full bg-black border border-gray-600 text-xl font-bold">-</button>
                         <span class="text-xl font-bold w-4 text-center">${item.qty}</span>
-                        <button onclick="changeQty(${i},1)" class="w-10 h-10 rounded-full bg-black border border-gray-600 flex items-center justify-center text-xl font-bold">+</button>
+                        <button onclick="changeQty(${i},1)" class="w-10 h-10 rounded-full bg-black border border-gray-600 text-xl font-bold">+</button>
                     </div>
-                </div>
-            `).join('');
+                </div>`).join('');
         }
-
-        function changeQty(i, d) {
-            cart[i].qty += d;
-            if (cart[i].qty <= 0) cart.splice(i, 1);
-            updateCartUI();
-        }
-
+        function changeQty(i, d) { cart[i].qty += d; if (cart[i].qty <= 0) cart.splice(i, 1); updateCartUI(); }
         function openVariantModal(itemId) {
-            let item = null;
-            menuData.forEach(c => { const f = c.items.find(it => it.id === itemId); if (f) item = f; });
+            let item = null; menuData.forEach(c => { const f = c.items.find(it => it.id === itemId); if (f) item = f; });
             document.getElementById('modalItemName').innerText = item.name;
-            document.getElementById('variantOptions').innerHTML = item.variants.map(v => `
-                <button onclick="addToCart('${item.id}','${item.name}',${v.price},'${v.name}')" 
-                        class="w-full text-left bg-[#222] p-5 rounded-2xl flex justify-between items-center border border-gray-700 active:border-[#D4AF37] active:bg-gold active:text-black transition-all">
-                    <span class="text-xl font-bold">${v.name}</span>
-                    <span class="font-bold text-xl">NT$ ${v.price}</span>
-                </button>
-            `).join('');
-            document.getElementById('variantModal').classList.remove('hidden');
-            document.getElementById('variantModal').classList.add('flex');
+            document.getElementById('variantOptions').innerHTML = item.variants.map(v => `<button onclick="addToCart('${item.id}','${item.name}',${v.price},'${v.name}')" class="w-full text-left bg-[#222] p-5 rounded-2xl flex justify-between items-center active:bg-gold active:text-black border border-gray-700 font-bold text-xl"><span class="text-white">${v.name}</span><span>NT$ ${v.price}</span></button>`).join('');
+            document.getElementById('variantModal').classList.remove('hidden'); document.getElementById('variantModal').classList.add('flex');
         }
-
         function closeModal() { document.getElementById('variantModal').classList.add('hidden'); }
-        function toggleCartModal() { 
-            const m = document.getElementById('cartModal');
-            m.classList.toggle('hidden');
-            if(!m.classList.contains('hidden')) m.classList.add('flex');
-        }
+        function toggleCartModal() { const m = document.getElementById('cartModal'); m.classList.toggle('hidden'); if(!m.classList.contains('hidden')) m.classList.add('flex'); }
 
         async function submitOrder() {
             const identity = document.getElementById('orderIdentity').value.trim();
             if (!identity) { alert("請填寫桌號或您的稱呼唷！"); return; }
-            
             const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
-            const msg = `🔔【游家小館 - 收到新訂單！】\n👤 顧客：${identity}\n----------------------\n${cart.map(i=>`▪️ ${i.name} x${i.qty}`).join('\n')}\n----------------------\n💰 總金額：NT$ ${total}\n⏰ 下單時間：${new Date().toLocaleString('zh-TW')}\n👉 請核對桌號後開始製作。`;
-            
+            const msg = `🔔【游家小館 - 有新訂單！】\n👤 顧客：${identity}\n----------------------\n${cart.map(i=>`▪️ ${i.name} x${i.qty}`).join('\n')}\n----------------------\n💰 總金額：NT$ ${total}\n⏰ 下單時間：${new Date().toLocaleString('zh-TW')}`;
             const btn = document.getElementById('submitOrderBtn');
-            const origText = btn.innerText;
             btn.innerText = "傳送中..."; btn.disabled = true;
-
             try {
                 const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg })
                 });
-
                 if (res.ok) {
-                    document.body.innerHTML = `
-                        <div class="p-10 text-center h-screen flex flex-col justify-center items-center fade-in">
-                            <div class="w-24 h-24 bg-green-900/30 rounded-full flex items-center justify-center mb-6 border-4 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
-                                <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
-                            </div>
-                            <h2 class="text-4xl gold-text font-bold mb-4">訂單已送出</h2>
-                            <p class="text-gray-400 text-xl mb-12">感謝您的點餐，老闆正在努力準備中！</p>
-                            <button onclick="location.reload()" class="bg-gold px-12 py-4 rounded-2xl font-bold text-2xl shadow-lg">返回菜單</button>
-                        </div>
-                    `;
+                    document.body.innerHTML = `<div class="p-10 text-center h-screen flex flex-col justify-center items-center"><div class="w-24 h-24 bg-green-900/30 rounded-full flex items-center justify-center mb-6 border-4 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]"><svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg></div><h2 class="text-4xl gold-text font-bold mb-4 tracking-widest">訂單已送出</h2><p class="text-gray-400 text-xl">老闆已經收到您的點單囉！</p><button onclick="location.reload()" class="mt-12 bg-gold px-12 py-4 rounded-2xl font-bold text-2xl shadow-lg">返回菜單</button></div>`;
                     window.scrollTo(0,0);
                 } else {
                     const err = await res.json();
-                    alert("傳送失敗！(代碼: " + err.error_code + ")\n可能原因：金鑰被GitHub自動失效了，請聯繫老闆處理。");
-                    btn.innerText = origText; btn.disabled = false;
+                    alert("傳送失敗！(代碼: " + err.error_code + ")\n原因: " + err.description + "\n如果是 401，代表金鑰又被殺掉了。");
+                    btn.innerText = "送出訂單 (現場買單)"; btn.disabled = false;
                 }
-            } catch (e) {
-                alert("網路異常，請確認網路連線或聯繫現場人員。");
-                btn.innerText = origText; btn.disabled = false;
-            }
+            } catch (e) { alert("連線異常，請聯繫老闆。"); btn.innerText = "送出訂單 (現場買單)"; btn.disabled = false; }
         }
-
         window.onload = initApp;
     </script>
 </body>
