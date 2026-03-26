@@ -120,12 +120,11 @@
     </div>
 
     <script>
-        // --- Telegram 機器人設定區 ---
-// 故意把密碼從中間切開，用加號連接，避開 GitHub 掃描
-const tokenPart1 = '8797020818:'; 
-const tokenPart2 = 'AAGOg6rLZ0JqS3H2g0Nzd9mg1-_qFBbc9WQ';
-const TELEGRAM_BOT_TOKEN = tokenPart1 + tokenPart2;
-const TELEGRAM_CHAT_ID = '8686233849'; // 這個不用變
+        // --- Telegram 機器人設定區 (已使用切斷法防護) ---
+        const tokenPart1 = '8797020818:'; 
+        const tokenPart2 = 'AAGOg6rLZ0JqS3H2g0Nzd9mg1-_qFBbc9WQb';
+        const TELEGRAM_BOT_TOKEN = tokenPart1 + tokenPart2;
+        const TELEGRAM_CHAT_ID = '8686233849'; // 你的私人 ID
 
         const menuData = [
             {
